@@ -21,7 +21,10 @@ const withPWA = require("next-pwa")({
     {
       urlPattern: /\.(?:jpg|jpeg|gif|png|svg|ico|webp)$/i,
       handler: "StaleWhileRevalidate",
-      options: { cacheName: "static-image-assets", expiration: { maxEntries: 64, maxAgeSeconds: 86400 } },
+      options: {
+        cacheName: "static-image-assets",
+        expiration: { maxEntries: 64, maxAgeSeconds: 86400 },
+      },
     },
     {
       urlPattern: /\/_next\/static.+\.js$/i,
@@ -32,11 +35,6 @@ const withPWA = require("next-pwa")({
       urlPattern: /\/_next\/image\?url=.+$/i,
       handler: "StaleWhileRevalidate",
       options: { cacheName: "next-image" },
-    },
-    {
-      urlPattern: /\.(?:mp3|wav|ogg)$/i,
-      handler: "CacheFirst",
-      options: { cacheName: "static-audio-assets" },
     },
     {
       urlPattern: /\.(?:js)$/i,
@@ -75,7 +73,21 @@ const withPWA = require("next-pwa")({
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["lh3.googleusercontent.com", "firebasestorage.googleapis.com"],
+    domains: [
+      "lh3.googleusercontent.com",
+      "firebasestorage.googleapis.com",
+    ],
+  },
+  experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "firebase/app",
+      "firebase/auth",
+      "firebase/firestore",
+    ],
+  },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
   },
 };
 
