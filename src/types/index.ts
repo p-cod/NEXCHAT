@@ -11,6 +11,12 @@ export interface User {
   lastSeen: Timestamp;
 }
 
+export interface ReplyTo {
+  messageId: string;
+  text: string;
+  senderName: string;
+}
+
 export interface Message {
   id: string;
   chatId: string;
@@ -18,14 +24,17 @@ export interface Message {
   senderName: string;
   text: string;
   createdAt: Timestamp;
-  readBy: string[]; // array of user uids who have read
+  readBy: string[];
   type: "text";
+  replyTo?: ReplyTo;
+  edited?: boolean;
+  deleted?: boolean;
 }
 
 export interface Chat {
   id: string;
   type: "direct" | "group";
-  participants: string[]; // uid array
+  participants: string[];
   participantDetails: Record<string, { displayName: string; photoURL?: string }>;
   lastMessage?: {
     text: string;
@@ -34,7 +43,6 @@ export interface Chat {
   };
   createdAt: Timestamp;
   updatedAt: Timestamp;
-  // group-only fields
   name?: string;
   description?: string;
   createdBy?: string;
@@ -48,3 +56,4 @@ export interface AuthState {
   loading: boolean;
   error: string | null;
 }
+

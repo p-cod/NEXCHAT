@@ -19,13 +19,13 @@ import {
   onSnapshot,
   addDoc,
   updateDoc,
+  deleteDoc,
   serverTimestamp,
   arrayUnion,
   writeBatch,
-  Timestamp,
 } from "firebase/firestore";
 import { auth, db } from "./firebase";
-import type { User, Chat, Message } from "@/types";
+import type { User, Chat, Message, ReplyTo } from "@/types";
 import { generateChatId } from "./utils";
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
@@ -171,13 +171,14 @@ export function subscribeToChats(uid: string, callback: (chats: Chat[]) => void)
 export async function sendMessage(
   chatId: string,
   sender: User,
-  text: string
+  text: string,
+  replyTo?: ReplyTo
 ): Promise<void> {
   const batch = writeBatch(db);
   const msgRef = doc(collection(db, "chats", chatId, "messages"));
   const now = serverTimestamp();
 
-  batch.set(msgRef, {
+  const msgData: Record<string, unknown> = {
     id: msgRef.id,
     chatId,
     senderId: sender.uid,
@@ -186,8 +187,13 @@ export async function sendMessage(
     createdAt: now,
     readBy: [sender.uid],
     type: "text",
-  });
+    edited: false,
+    deleted: false,
+  };
 
+  if (replyTo) msgData.replyTo = replyTo;
+
+  batch.set(msgRef, msgData);
   batch.update(doc(db, "chats", chatId), {
     lastMessage: {
       text: text.trim(),
@@ -198,6 +204,20 @@ export async function sendMessage(
   });
 
   await batch.commit();
+}
+
+export async function editMessage(chatId: string, messageId: string, newText: string): Promise<void> {
+  await updateDoc(doc(db, "chats", chatId, "messages", messageId), {
+    text: newText.trim(),
+    edited: true,
+  });
+}
+
+export async function deleteMessageForEveryone(chatId: string, messageId: string): Promise<void> {
+  await updateDoc(doc(db, "chats", chatId, "messages", messageId), {
+    text: "This message was deleted",
+    deleted: true,
+  });
 }
 
 export function subscribeToMessages(
